@@ -63,10 +63,7 @@ Line.prototype.constructor = Line;
 
 Line.prototype.render = function () {
     drawio.ctx.beginPath();
-    drawio.ctx.moveTo(0, 0);
+    drawio.ctx.moveTo(this.position.x, this.position.y);
     drawio.ctx.lineTo(300, 150);
     drawio.ctx.stroke();
 }
-
-
-
