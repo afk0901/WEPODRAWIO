@@ -58,12 +58,15 @@ Circle.prototype.resize = function (x, y) {
     this.radius = y - this.position.y;
 }
 
-Line.prototype.render = function () {
+Line.prototype = Object.create(Shape.prototype);
+Line.prototype.constructor = Line;
 
+Line.prototype.render = function () {
+    drawio.ctx.beginPath();
     drawio.ctx.moveTo(0, 0);
     drawio.ctx.lineTo(300, 150);
     drawio.ctx.stroke();
 }
-Line.prototype = Object.create(Shape.prototype);
-Line.prototype.constructor = Line;
+
+
 

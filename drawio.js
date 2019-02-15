@@ -49,6 +49,9 @@
             case drawio.availableShapes.CIRCLE:
                 drawio.selectedElement = new Circle( {x: mouseEvent.offsetX, y: mouseEvent.offsetY}, 100);
                 break;
+            case drawio.availableShapes.LINE:
+                drawio.selectedElement = new Line( {x: mouseEvent.offsetX, y: mouseEvent.offsetY});
+                break;
         }
     });
 
