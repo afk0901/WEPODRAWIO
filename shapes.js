@@ -24,8 +24,15 @@ function Circle(position, radius) {
     Shape.call(this, position);
     this.radius = radius;
     this.position = position;
-
 }
+
+function Line(position) {
+    Shape.call(this, position);
+    this.position = position;
+}
+
+Rectangle.prototype = Object.create(Shape.prototype);
+Rectangle.prototype.constructor = Rectangle;
 
 Rectangle.prototype.render = function () {
     drawio.ctx.fillStyle = $('.change-color').val()
@@ -36,8 +43,9 @@ Rectangle.prototype.resize = function (x, y) {
     this.width = x - this.position.x;
     this.height = y - this.position.y;
 }
-Rectangle.prototype = Object.create(Shape.prototype);
-Rectangle.prototype.constructor = Rectangle;
+
+Circle.prototype = Object.create(Shape.prototype);
+Circle.prototype.constructor = Circle;
 
 Circle.prototype.render = function () {
     drawio.ctx.beginPath();
@@ -49,8 +57,6 @@ Circle.prototype.resize = function (x, y) {
     this.radius = x - this.position.x;
     this.radius = y - this.position.y;
 }
-Circle.prototype = Object.create(Shape.prototype);
-Circle.prototype.constructor = Circle;
 
 Line.prototype.render = function () {
 
@@ -60,3 +66,4 @@ Line.prototype.render = function () {
 }
 Line.prototype = Object.create(Shape.prototype);
 Line.prototype.constructor = Line;
+
