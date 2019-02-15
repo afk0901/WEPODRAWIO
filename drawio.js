@@ -11,18 +11,22 @@
      canvas: document.getElementById('my-canvas'),
      ctx: document.getElementById('my-canvas').getContext('2d'),//This is a canvas object, tell it that we are going to draw in 2d.
      selectedElement: null,
+     //All available shapes goes here
      availableShapes: {
-         RECTANGLE: 'rectangle'
-         //All available shapes goes here
+         RECTANGLE: 'rectangle',
+         CIRCLE: 'circle',
+         LINE: 'line'
      }
  };
 
  $(function(){
     //Document is loaded and parsed
-
-    //Renders the proper object
+  
+    //Renders the objects from the array
     function drawCanvas() {
-        if(drawio.selectedElement) {
+        
+        if(drawio.selectedElement && drawio.selectedElement != null) {
+            //drawio.ctx.fillStyle = color;
            drawio.selectedElement.render();
         }
         for (var i = 0; i < drawio.shapes.length; i++) {
@@ -40,7 +44,10 @@
     $('#my-canvas').on('mousedown', function(mouseEvent){
         switch (drawio.selectedShape){
             case drawio.availableShapes.RECTANGLE:
-                drawio.selectedElement = new Rectangle( {x: mouseEvent.offsetX, y: mouseEvent.offsetY}, 0, 0 );
+                drawio.selectedElement = new Rectangle( {x: mouseEvent.offsetX, y: mouseEvent.offsetY}, 0, 0);
+                break;
+            case drawio.availableShapes.CIRCLE:
+                drawio.selectedElement = new Circle( {x: mouseEvent.offsetX, y: mouseEvent.offsetY}, 100);
                 break;
         }
     });
@@ -56,8 +63,9 @@
 
     //mouseup
     $('#my-canvas').on('mouseup', function(){
+        
         drawio.shapes.push(drawio.selectedElement);//mousemove clears everything
         console.log(drawio.shapes);
         drawio.selectedElement = null;
-    });
+    });    
  });
