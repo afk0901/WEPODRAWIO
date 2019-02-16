@@ -14,32 +14,45 @@ Shape.prototype.move = function (position) {
 
 Shape.prototype.resize = function () { };
 
-function Rectangle(position, width, height, color) {
+function Rectangle(position, color) {
     Shape.call(this, position);
-    this.width = width;
-    this.height = height;
+    this.width = 0;
+    this.height = 0;
 };
 
-function Circle(position, radius) {
+function Circle(position) {
     Shape.call(this, position);
-    this.radius = radius;
+    this.radius = 0;
     this.position = position;
 }
 
-function Line(position) {
+function Line(position, linestartx, linestarty) {
     Shape.call(this, position);
     this.position = position;
+    this.linestartx = linestartx;
+    this.linestarty = linestarty;
+}
+
+function Text(position, textposx, textposy, font, fontsize) {
+    Shape.call(this, position);
+    this.position = position;
+    this.textposx = textposx;
+    this.textposy = textposy;
+    this.font = font;
+    this.fontsize = fontsize;
+    this.text = '';
+
 }
 
 Rectangle.prototype = Object.create(Shape.prototype);
 Rectangle.prototype.constructor = Rectangle;
 
 Rectangle.prototype.render = function () {
-    drawio.ctx.fillStyle = $('.change-color').val()
     drawio.ctx.fillRect(this.position.x, this.position.y, this.width, this.height);
 };
 
 Rectangle.prototype.resize = function (x, y) {
+    //Start wheere the mouse was in the begining end where the mouse is at the end draw a rectangle between that.
     this.width = x - this.position.x;
     this.height = y - this.position.y;
 }
@@ -63,7 +76,26 @@ Line.prototype.constructor = Line;
 
 Line.prototype.render = function () {
     drawio.ctx.beginPath();
-    drawio.ctx.moveTo(this.position.x, this.position.y);
-    drawio.ctx.lineTo(300, 150);
+    drawio.ctx.moveTo(this.linestartx, this.linestarty);
+    drawio.ctx.lineTo(this.position.x, this.position.y);
+
     drawio.ctx.stroke();
+}
+
+Line.prototype.resize = function (x, y) {
+    this.linestartx = x;
+    this.linestarty = y;
+}
+
+Text.prototype = Object.create(Shape.prototype);
+Text.prototype.constructor = Text;
+
+Text.prototype.render = function(){
+    drawio.ctx.font = this.fontsize.toString() + " " + this.font;
+    console.log(this.fontsize.toString() + " " + this.font);
+    drawio.ctx.fillText(this.text, this.position.x, this.position.y);
+}
+
+Text.prototype.resize = function() {
+    
 }
