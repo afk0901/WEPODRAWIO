@@ -11,7 +11,8 @@ window.drawio = {
     ctx: document.getElementById('my-canvas').getContext('2d'),//This is a canvas object, tell it that we are going to draw in 2d.
 
     shapes: [],
-    selectedShape: 'square',
+    lines: [],
+    selectedShape: 'freehand',
     selectedElement: null,
     selectedElementText: null,
 
@@ -20,7 +21,8 @@ window.drawio = {
         RECTANGLE: 'square',
         CIRCLE: 'circle',
         LINE: 'line',
-        TEXT: 'text'
+        TEXT: 'text',
+        FREEHAND: 'freehand'
     },
 
     colorSettings: {
@@ -41,7 +43,8 @@ window.drawio = {
         lineWidthSelectionInput: '#select-line-width',
         lineWidth: 10,
         maxlineWidth: 490,
-        lineWidhtRange: 10
+        lineWidhtRange: 10,
+        lineCap: 'butt'
     },
     event: null,  //To transfer event between functions
 };
@@ -58,17 +61,27 @@ $(function () {
         //Do nothing, if those is not defined, because they are maybe not always needed.
     }
     //Renders the objects from the array
-    function drawCanvas() {
+    function drawCanvas(event) {
 
         if (drawio.selectedElement) {
-            drawio.selectedElement.render();
+            console.log(event)
+            drawio.selectedElement.render(event);
 
         }
 
         for (var i = 0; i < drawio.shapes.length; i++) {
             if (drawio.shapes[i] != null) {
-                drawio.shapes[i].render();
+                if(Array.isArray(drawio.shapes[i])) { 
+                    // var obj = new Freehand();
+                    // console.log("Object is", obj);
+                    var elem = drawio.shapes[i];
+                    Freehand.prototype.render(elem);
+                }
+                else {
+                    drawio.shapes[i].render(event);
+                }
             }
+            
         }
     }
     $('.change-color').on('change', function () {
@@ -83,12 +96,13 @@ $(function () {
         });
     }
 
-    //Clears the canvas and drawsthe elements and performs other functionality such resize and such a stuff.
+    //Clears the canvas and draws the elements and performs other functionality such resize and such a stuff.
     function clearAndDraw(element, mouseEvent) {
         if (element) {
             drawio.ctx.clearRect(0, 0, drawio.canvas.width, drawio.canvas.height);
             element.resize(mouseEvent.offsetX, mouseEvent.offsetY);
-            drawCanvas();//Draws everything as the shapes were pushed into the shape array.
+            
+            drawCanvas(mouseEvent);//Draws everything as the shapes were pushed into the shape array.
         }
     }
     //Helper to make a text input.
@@ -128,6 +142,12 @@ $(function () {
                 drawio.selectedElementText = new Text({ x: mouseEvent.offsetX, y: mouseEvent.offsetY }, 0, 0,
                     drawio.fontSettings.font, drawio.fontSettings.fontSize, drawio.colorSettings.color);
                 break;
+            case drawio.availableShapes.FREEHAND:
+                drawio.selectedElement = new Freehand({x: mouseEvent.offsetX, y: mouseEvent.offsetY}, drawio.colorSettings.color, drawio.lineSettings.lineWidth, drawio.lineSettings.lineCap);
+                drawio.ctx.beginPath();
+                drawio.ctx.moveTo(mouseEvent.offsetX, mouseEvent.offsetY);
+                drawio.selectedElement.lineList.push({x: mouseEvent.offsetX, y: mouseEvent.offsetY});
+                break;
         }
     });
     //If the user presses on enter when text input is displayed to type in some text then draw the text.
@@ -153,17 +173,25 @@ $(function () {
     });
     //mousemove
     $('#my-canvas').on('mousemove', function (mouseEvent) {
-        clearAndDraw(drawio.selectedElement, mouseEvent);
+        if(drawio.selectedElement && drawio.selectedShape == 'freehand') {
+            drawio.selectedElement.lineList.push({x: mouseEvent.offsetX, y:mouseEvent.offsetY});
+            drawio.selectedElement.renderOnMouseMove(mouseEvent);
+            console.log("Freehand is selected");
+        }else {
+            clearAndDraw(drawio.selectedElement, mouseEvent);
+        }
     });
 
     //mouseup
     $('#my-canvas').on('mouseup', function () {
-        drawio.shapes.push(drawio.selectedElement);//mousemove clears everything
         if (drawio.selectedElementText) {
+            drawio.ctx.closePath();
             drawio.shapes.push(drawio.selectedElementText);
         }
+        drawio.shapes.push(drawio.selectedElement);//mousemove clears everything
         console.log(drawio.shapes);
         drawio.selectedElement = null;
+        drawio.lines = [];
     });
     changeSettingsOptionOnEvent(drawio.fontSettings.fontSizeSelectionInput);
 });

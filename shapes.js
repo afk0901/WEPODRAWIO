@@ -48,6 +48,15 @@ function Text(position, textposx, textposy, font, fontsize, color) {
     this.color = color;
 }
 
+function Freehand(position, color, lineWidth, lineCap) {
+    Shape.call(this,position);
+    this.color = color;
+    this.lineWidth = lineWidth;
+    this.lineCap = lineCap;
+    this.lineList = [];
+   
+}
+
 Rectangle.prototype = Object.create(Shape.prototype);
 Rectangle.prototype.constructor = Rectangle;
 
@@ -109,5 +118,35 @@ Text.prototype.render = function(){
 
 Text.prototype.resize = function() {
     
+}
+
+/// Freehand Drawing
+
+Freehand.prototype = Object.create(Shape.prototype);
+Freehand.prototype.constructor = Freehand;
+
+Freehand.prototype.render = function () {
+    var i = 1;
+    drawio.ctx.strokeStyle = this.color;
+    drawio.ctx.lineWidth = this.lineWidth;
+    // drawio.ctx.lineCap = this.lineCap;
+    drawio.ctx.beginPath();
+    drawio.ctx.moveTo(this.lineList[0].x, this.lineList[0].y)
+    // this.lineList.push({x: mouseEvent.offsetX, y:mouseEvent.offsetY});
+    while(i < this.lineList.length) {
+        drawio.ctx.lineTo(this.lineList[i].x, this.lineList[i].y)
+        drawio.ctx.stroke();
+        i++;
+    }
+    console.log("Inside Freehand Render function, array length is:");
+}
+Freehand.prototype.resize = function () {
+    
+}
+Freehand.prototype.renderOnMouseMove = function (mouseEvent) {
+    drawio.ctx.strokeStyle = this.color;
+    drawio.ctx.lineWidth = this.lineWidth;
+    drawio.ctx.lineTo(mouseEvent.offsetX,mouseEvent.offsetY);
+    drawio.ctx.stroke();
 }
 
