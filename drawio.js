@@ -30,36 +30,45 @@ window.drawio = {
     },
 
     fontSettings: {
-        fontSize: 10, //Default font size
+        fontSize: 40, //Default font size
         maxFontSize: 490,
+        minFontSize: 10,
         fontSizeRange: 10,
         fontSizeSelectionInput: '#select-font-size',
-        font: 'Arial',
-        fontFamilyArray: ['Arial', 'Times', 'bla'],
+        font: 'cursive',
+        fontFamilyArray: ['Arial', 'Helvetica', 'cursive'],//List of available fonts
         fontSelectioninput: '#select-font'
     },
 
     lineSettings: {
         lineWidthSelectionInput: '#select-line-width',
-        lineWidth: 10,
-        maxlineWidth: 490,
-        lineWidhtRange: 10,
+        minLineWidht: 1,
+        lineWidth: 5, //Default line width
+        maxlineWidth: 50,
+        lineWidhtRange: 1,
         lineCap: 'butt'
     },
     event: null,  //To transfer event between functions
+    undoStorage: [] //Keeps undoed shapes
 };
 
 $(function () {
     //Document is loaded and parsed
+
     try {
         //Implemented in loadselect.js
-        loadNumbersSelect(drawio.fontSettings.maxFontSize, drawio.fontSettings.fontSizeRange, drawio.fontSettings.fontSizeSelectionInput);
-        loadNumbersSelect(drawio.lineSettings.maxlineWidth, drawio.lineSettings.lineWidhtRange, drawio.lineSettings.lineWidthSelectionInput);
+        loadNumbersSelect(drawio.fontSettings.maxFontSize, drawio.fontSettings.fontSizeRange, drawio.fontSettings.fontSizeSelectionInput, drawio.fontSettings.minFontSize);
+        loadNumbersSelect(drawio.lineSettings.maxlineWidth, drawio.lineSettings.lineWidhtRange, drawio.lineSettings.lineWidthSelectionInput, drawio.lineSettings.minLineWidht);
         loadStringsSelect(drawio.fontSettings.fontSelectioninput, drawio.fontSettings.fontFamilyArray);
+        //Set default values in the select boxes
+        $(drawio.fontSettings.fontSizeSelectionInput).val(drawio.fontSettings.fontSize);
+        $(drawio.fontSettings.fontSelectioninput).val(drawio.fontSettings.font);
+        $(drawio.lineSettings.lineWidthSelectionInput).val(drawio.lineSettings.lineWidth);
     }
     catch (error) {
         //Do nothing, if those is not defined, because they are maybe not always needed.
     }
+
     //Renders the objects from the array
     function drawCanvas(event) {
 
@@ -83,17 +92,6 @@ $(function () {
             }
             
         }
-    }
-    $('.change-color').on('change', function () {
-        var color = $(this).val();
-        drawio.colorSettings.color = color;
-    });
-    //Changes settings like fonts, linewidth and so on some event
-    function changeSettingsOptionOnEvent(elementToSelect) {
-        $(document).on('change', elementToSelect, function () {
-            drawio.fontSettings.fontSize = $(this).val();//How to change this?
-            console.log(settingsOption);
-        });
     }
 
     //Clears the canvas and draws the elements and performs other functionality such resize and such a stuff.
@@ -123,6 +121,16 @@ $(function () {
         $(this).addClass('selected');
         drawio.selectedShape = $(this).data('shape');
     });
+
+    function undo(shapesarray){
+        var undoedShape = shapesarray.pop();
+        //drawio.undoStorage.append(undoedShape);
+        console.log(drawio.undoStorage);
+        drawio.ctx.clearRect(0, 0, drawio.canvas.width, drawio.canvas.height);
+        drawCanvas();
+    }
+
+
 
     //mousedown
     $('#my-canvas').on('mousedown', function (mouseEvent) {
@@ -193,5 +201,26 @@ $(function () {
         drawio.selectedElement = null;
         drawio.lines = [];
     });
-    changeSettingsOptionOnEvent(drawio.fontSettings.fontSizeSelectionInput);
+
+    $('.change-color').on('change', function () {
+        var color = $(this).val();
+        drawio.colorSettings.color = color;
+    });
+
+    $(drawio.fontSettings.fontSizeSelectionInput).on('change', function () {
+        drawio.fontSettings.fontSize = $(this).val();
+    });
+
+    $(drawio.fontSettings.fontSelectioninput).on('change', function () {
+        drawio.fontSettings.font = $(this).val();
+    });
+
+    $(drawio.lineSettings.lineWidthSelectionInput).on('change', function () {
+        drawio.lineSettings.lineWidth = $(this).val();
+    });
+
+    $('#undo').on('click', function(){
+        console.log(drawio.shapes);
+        undo(drawio.shapes);
+    });
 });

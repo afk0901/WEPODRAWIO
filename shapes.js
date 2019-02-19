@@ -109,15 +109,15 @@ Line.prototype.resize = function (x, y) {
 Text.prototype = Object.create(Shape.prototype);
 Text.prototype.constructor = Text;
 
-Text.prototype.render = function(){
+Text.prototype.render = function () {
     drawio.ctx.fillStyle = this.color;
     drawio.ctx.font = this.fontsize.toString() + "px " + this.font;
     console.log(drawio.ctx.font);
     drawio.ctx.fillText(this.text, this.position.x, this.position.y);
 }
 
-Text.prototype.resize = function() {
-    
+Text.prototype.resize = function () {
+
 }
 
 /// Freehand Drawing
