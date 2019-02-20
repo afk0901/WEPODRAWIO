@@ -101,9 +101,8 @@ Text.prototype = Object.create(Shape.prototype);
 Text.prototype.constructor = Text;
 
 Text.prototype.render = function () {
-    drawio.ctx.fillStyle = this.color;
     drawio.ctx.font = this.fontsize.toString() + "px " + this.font;
-    console.log(drawio.ctx.font);
+    drawio.ctx.fillStyle = this.color;
     drawio.ctx.fillText(this.text, this.position.x, this.position.y);
 }
 

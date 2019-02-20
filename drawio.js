@@ -51,15 +51,17 @@ window.drawio = {
 
 $(function () {
     //Document is loaded and parsed
-
+   
     try {
         //Implemented in loadselect.js
         loadNumbersSelect(drawio.fontSettings.maxFontSize, drawio.fontSettings.fontSizeRange, drawio.fontSettings.fontSizeSelectionInput, drawio.fontSettings.minFontSize);
         loadNumbersSelect(drawio.lineSettings.maxlineWidth, drawio.lineSettings.lineWidhtRange, drawio.lineSettings.lineWidthSelectionInput, drawio.lineSettings.minLineWidht);
         loadStringsSelect(drawio.fontSettings.fontSelectioninput, drawio.fontSettings.fontFamilyArray);
+
         //Set default values in the select boxes
         $(drawio.fontSettings.fontSizeSelectionInput).val(drawio.fontSettings.fontSize);
         $(drawio.fontSettings.fontSelectioninput).val(drawio.fontSettings.font);
+
         $(drawio.lineSettings.lineWidthSelectionInput).val(drawio.lineSettings.lineWidth);
     }
     catch (error) {
@@ -108,19 +110,68 @@ $(function () {
         drawio.selectedShape = $(this).data('shape');
     });
 
-    function undo(shapesarray){
-        var undoedShape = shapesarray.pop();
-        //drawio.undoStorage.append(undoedShape);
-        console.log(drawio.undoStorage);
+    function undo(shapesarray) {
+        if (shapesarray.length !== 0) {
+            var undoedShape = shapesarray.pop();
+
+            drawio.undoStorage.push(undoedShape);//So it's possible to do a a redo.
+        }
         drawio.ctx.clearRect(0, 0, drawio.canvas.width, drawio.canvas.height);
         drawCanvas();
     }
 
+    function redo(shapesarray) {
+        if (drawio.undoStorage.length !== 0) {
+            shapesarray.push(drawio.undoStorage[drawio.undoStorage.length - 1]);
+        }
+        drawio.undoStorage.pop();
+        drawio.ctx.clearRect(0, 0, drawio.canvas.width, drawio.canvas.height);
+        drawCanvas();
+    }
 
+    //Find the settings to save and returns the value and the key.
+    function findSettings(settings) {
+        //Produces a key value pair of the object
+        var drawioEntries = Object.entries(drawio);
+        for (var i = 0; i < drawioEntries.length; i++) {
+            if (drawioEntries[i][0] == settings) {
+                return drawioEntries[i][1]; //Gets the setting object
+            }
+        }
+    }
+    //Finds all the settings and pushes them into an array.
+    function AllSettings() {
+        var allSettings = [];
+        var drawioEntries = Object.entries(drawio); //objects properties with key value pairs
+        for (var i = 0; i < drawioEntries.length; i++) {
+            //Gets the key and value of setting[i]
+            allSettings.push([drawioEntries[i][0], findSettings(drawioEntries[i][0])]);
+        }
+        return allSettings;
+    }
+
+     //Saves the settings
+     function save() {
+        var settings = AllSettings();
+
+        for (var i = 0; i < settings.length; i++) {
+            window.localStorage.setItem(settings[i][0], JSON.stringify(settings[i][1]));
+            console.log(localStorage.getItem(settings[i][0]));
+        }
+    }
+   
+    //Loads the settings again
+    function load() {
+        var settings = AllSettings();
+        for (var i = 0; i < settings.length; i++) {
+            console.log(localStorage.getItem(settings[i][0]));
+        }
+        drawCanvas();
+    }
 
     //mousedown
     $('#my-canvas').on('mousedown', function (mouseEvent) {
-        console.log(drawio.selectedShape);
+        //console.log(drawio.selectedShape);
         switch (drawio.selectedShape) {
 
             case drawio.availableShapes.RECTANGLE:
@@ -144,7 +195,6 @@ $(function () {
         if (e.which == 13) {
             if (text != null) {
                 drawio.selectedElementText.text = text;
-                drawio.selectedElementText.color = drawio.color;
                 clearAndDraw(drawio.selectedElementText, drawio.event); //drawio.event should be the mouseEvent right now
                 drawio.event = null; //As clearAndDraw got the event, so there will be no confusion, like the wrong event or something.
                 $("input").remove('.text');//no need for input now
@@ -170,7 +220,7 @@ $(function () {
         if (drawio.selectedElementText) {
             drawio.shapes.push(drawio.selectedElementText);
         }
-        console.log(drawio.shapes);
+        //console.log(drawio.shapes);
         drawio.selectedElement = null;
     });
 
@@ -191,8 +241,34 @@ $(function () {
         drawio.lineSettings.lineWidth = $(this).val();
     });
 
-    $('#undo').on('click', function(){
-        console.log(drawio.shapes);
+    $('#undo').on('click', function () {
+        //console.log(drawio.shapes);
         undo(drawio.shapes);
     });
+
+
+    $('#redo').on('click', function () {
+        console.log(drawio.shapes);
+        redo(drawio.shapes);
+    });
+
+    $('.save').on('click', function() {
+        console.log("save");
+        save();
+    });
+
+    $(document).on('keydown', function (e) {
+        if (e.which === 90 && e.ctrlKey) {
+            undo(drawio.shapes);
+        }
+    });
+
+    $(document).on('keydown', function (e) {
+        if (e.which === 89 && e.ctrlKey) {
+            redo(drawio.shapes);
+        }
+    });
+
+    console.log('load');
+    load();
 });
