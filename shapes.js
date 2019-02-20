@@ -156,6 +156,7 @@ Freehand.prototype.constructor = Freehand;
 
 Freehand.prototype.render = function () {
     var i = 1;
+    var j = 1
     drawio.ctx.strokeStyle = this.color;
     drawio.ctx.lineWidth = this.lineWidth;
     drawio.ctx.lineCap = this.lineCap;
@@ -177,9 +178,9 @@ Freehand.prototype.render = function () {
     drawio.hCtx.lineJoin = 'round';
     drawio.hCtx.beginPath();
     drawio.hCtx.moveTo(this.lineList[0].x, this.lineList[0].y)
-    while(i < this.lineList.length) {
-        drawio.hCtx.lineTo(this.lineList[i].x, this.lineList[i].y)
-        i++;
+    while(j < this.lineList.length) {
+        drawio.hCtx.lineTo(this.lineList[j].x, this.lineList[j].y)
+        j++;
     }
     drawio.hCtx.stroke();
     drawio.hCtx.closePath();

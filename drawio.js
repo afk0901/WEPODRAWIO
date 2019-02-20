@@ -79,22 +79,10 @@ $(function () {
         if (drawio.selectedElement) {
             console.log(event)
             drawio.selectedElement.render(event);
-
         }
 
         for (var i = 0; i < drawio.shapes.length; i++) {
-            // if (drawio.shapes[i] != null) {
-            //     if(Array.isArray(drawio.shapes[i])) { 
-            //         // var obj = new Freehand();
-            //         // console.log("Object is", obj);
-            //         var elem = drawio.shapes[i];
-            //         Freehand.prototype.render(elem);
-            //     }
-            //     else {
-                    drawio.shapes[i].render(event);
-                
-            
-            
+            drawio.shapes[i].render(event);
         }
     }
 
