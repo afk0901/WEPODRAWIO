@@ -22,12 +22,13 @@ body {
     transition: color .5s;
 }
 
+
+.icon.selected {
+    color: yellow;
+}
 .icon:hover {
     color: orange;
     cursor: pointer;
-}
-.icon.selected {
-    color: yellow;
 }
 
 .never-select{
@@ -38,6 +39,10 @@ body {
     width: 100px;
     top: 15px;
     transition: color .5s;
+}
+.never-select:hover {
+    color: orange;
+    cursor: pointer;
 }
 
 .change-color {

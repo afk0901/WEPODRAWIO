@@ -32,10 +32,10 @@
         <div class="icon" data-redWrite="read">
             <i class="fa fa-hdd" aria-hidden="true"></i>
         </div>
-        <div class="icon" id="undo">
-            <i class="fa fa-undo" aria-hidden="true"></i>
+        <div class="never-select" id="undo">
+            <i class="fa fa-undo" aria-hidden="true" "></i>
         </div>
-        <div class="icon" id="redo">
+        <div class="never-select" id="redo">
             <i class="fa fa-repeat" aria-hidden="true"></i>
         </div>
         <div class="never-select">
@@ -59,6 +59,7 @@
         <canvas id="my-canvas" width="800" height="500">
             <p>Not Supported</p>
         </canvas>
+        <canvas id="hit-canvas" width="800" height="500">
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.js" charset="utf-8"></script>
     <script src="shapes.js" charset="utf-8"></script>
@@ -67,3 +68,5 @@
 </body>
 
 </html>
+
+<!-- hitCanvas: document.querySelectorAll('.container').appendChild(document.createElement('canvas', width = 800, height = 500)), -->
