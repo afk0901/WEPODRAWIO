@@ -14,6 +14,7 @@ window.drawio = {
 
     dragging : false,
     hitKey: 'black',
+    shapeBeingDragged: 0,
     shapes: [],
     lines: [],
     selectedShape: 'freehand',
@@ -23,10 +24,12 @@ window.drawio = {
     //All available shapes goes here
     availableShapes: {
         RECTANGLE: 'square',
+        RECTANGLE_FILLED: 'square-filled',
         CIRCLE: 'circle',
         LINE: 'line',
         TEXT: 'text',
-        FREEHAND: 'freehand'
+        FREEHAND: 'freehand',
+        CIRCLE_FILLED: 'circle-filled' 
     },
 
     colorSettings: {
@@ -58,15 +61,17 @@ window.drawio = {
 
 $(function () {
     //Document is loaded and parsed
-
+   
     try {
         //Implemented in loadselect.js
         loadNumbersSelect(drawio.fontSettings.maxFontSize, drawio.fontSettings.fontSizeRange, drawio.fontSettings.fontSizeSelectionInput, drawio.fontSettings.minFontSize);
         loadNumbersSelect(drawio.lineSettings.maxlineWidth, drawio.lineSettings.lineWidhtRange, drawio.lineSettings.lineWidthSelectionInput, drawio.lineSettings.minLineWidht);
         loadStringsSelect(drawio.fontSettings.fontSelectioninput, drawio.fontSettings.fontFamilyArray);
+
         //Set default values in the select boxes
         $(drawio.fontSettings.fontSizeSelectionInput).val(drawio.fontSettings.fontSize);
         $(drawio.fontSettings.fontSelectioninput).val(drawio.fontSettings.font);
+
         $(drawio.lineSettings.lineWidthSelectionInput).val(drawio.lineSettings.lineWidth);
     }
     catch (error) {
@@ -74,7 +79,7 @@ $(function () {
     }
 
     //Renders the objects from the array
-    function drawCanvas(event) {
+    function drawCanvas(event, flag) {
 
         if (drawio.selectedElement) {
             console.log(event)
@@ -82,7 +87,7 @@ $(function () {
         }
 
         for (var i = 0; i < drawio.shapes.length; i++) {
-            drawio.shapes[i].render(event);
+            drawio.shapes[i].render(event,flag);
         }
     }
 
@@ -115,11 +120,22 @@ $(function () {
         drawio.selectedShape = $(this).data('shape');
     });
 
-    function undo(shapesarray){
-        var undoedShape = shapesarray.pop();
-        drawio.undoStorage.push(undoedShape);
-        console.log(drawio.undoStorage);
+    function undo(shapesarray) {
+        if (shapesarray.length !== 0) {
+            var undoedShape = shapesarray.pop();
+
+            drawio.undoStorage.push(undoedShape);//So it's possible to do a a redo.
+        }
+        drawio.ctx.clearRect(0, 0, drawio.canvas.width, drawio.canvas.height);
         drawio.hCtx.clearRect(0, 0, drawio.canvas.width, drawio.canvas.height);
+        drawCanvas();
+    }
+
+    function redo(shapesarray) {
+        if (drawio.undoStorage.length !== 0) {
+            shapesarray.push(drawio.undoStorage[drawio.undoStorage.length - 1]);
+        }
+        drawio.undoStorage.pop();
         drawio.ctx.clearRect(0, 0, drawio.canvas.width, drawio.canvas.height);
         drawCanvas();
     }
@@ -134,10 +150,12 @@ $(function () {
             for(var i = 0; i < drawio.shapes.length; i++){
                 if(drawio.shapes[i].hitKey == hitKey) {
                     console.log("The shape selected is",drawio.shapes[i]);
+                    drawio.shapeBeingDragged = i;
                     drawio.dragging = true;
                 }
             }
-        }else {
+        }
+        else {
             drawio.hitKey = getRandomColor();
             switch (drawio.selectedShape) {
 
@@ -145,9 +163,17 @@ $(function () {
                     drawio.selectedElement = new Rectangle({ x: mouseEvent.offsetX, y: mouseEvent.offsetY }, drawio.colorSettings.color, drawio.hitKey);
                     drawio.hitKey = getRandomColor();
                     break;
+                case drawio.availableShapes.RECTANGLE_FILLED:
+                    drawio.selectedElement = new Rectangle({ x: mouseEvent.offsetX, y: mouseEvent.offsetY }, drawio.colorSettings.color, drawio.hitKey, true);
+                    drawio.hitKey = getRandomColor();
+                    break;
                 case drawio.availableShapes.CIRCLE:
                     drawio.selectedElement = new Circle({ x: mouseEvent.offsetX, y: mouseEvent.offsetY }, drawio.colorSettings.color, drawio.hitKey);
                     drawio.hitKey = getRandomColor();
+                    break;
+                case drawio.availableShapes.CIRCLE_FILLED:
+                    drawio.selectedElement = new Circle({ x: mouseEvent.offsetX, y: mouseEvent.offsetY }, drawio.colorSettings.color, drawio.hitKey, true);
+                    getRandomColor();
                     break;
                 case drawio.availableShapes.LINE:
                     drawio.selectedElement = new Line({ x: mouseEvent.offsetX, y: mouseEvent.offsetY }, 0, 0, drawio.colorSettings.color, drawio.lineSettings.lineWidth, drawio.hitKey);
@@ -169,14 +195,74 @@ $(function () {
                     break;
             }
         }
-    });
+    })
+    //Find the settings to save and returns the value and the key.
+    function findSettings(settings) {
+        //Produces a key value pair of the object
+        var drawioEntries = Object.entries(drawio);
+        for (var i = 0; i < drawioEntries.length; i++) {
+            if (drawioEntries[i][0] == settings) {
+                return drawioEntries[i][1]; //Gets the setting object
+            }
+        }
+    }
+    //Finds all the settings and pushes them into an array.
+    function AllSettings() {
+        var allSettings = [];
+        var drawioEntries = Object.entries(drawio); //objects properties with key value pairs
+        for (var i = 0; i < drawioEntries.length; i++) {
+            //Gets the key and value of setting[i]
+            allSettings.push([drawioEntries[i][0], findSettings(drawioEntries[i][0])]);
+        }
+        return allSettings;
+    }
+
+     //Saves the settings
+     function save() {
+        var settings = AllSettings();
+
+        for (var i = 0; i < settings.length; i++) {
+            window.localStorage.setItem(settings[i][0], JSON.stringify(settings[i][1]));
+            console.log(localStorage.getItem(settings[i][0]));
+        }
+    }
+   
+    //Loads the settings again
+    function load() {
+        var settings = AllSettings();
+        for (var i = 0; i < settings.length; i++) {
+            console.log(localStorage.getItem(settings[i][0]));
+        }
+        drawCanvas();
+    }
+
+    //mousedown
+    // $('#my-canvas').on('mousedown', function (mouseEvent) {
+    //     //console.log(drawio.selectedShape);
+    //     switch (drawio.selectedShape) {
+
+    //         case drawio.availableShapes.RECTANGLE:
+    //             drawio.selectedElement = new Rectangle({ x: mouseEvent.offsetX, y: mouseEvent.offsetY }, drawio.colorSettings.color);
+    //             break;
+    //         case drawio.availableShapes.CIRCLE:
+    //             drawio.selectedElement = new Circle({ x: mouseEvent.offsetX, y: mouseEvent.offsetY }, drawio.colorSettings.color);
+    //             break;
+    //         case drawio.availableShapes.LINE:
+    //             drawio.selectedElement = new Line({ x: mouseEvent.offsetX, y: mouseEvent.offsetY }, 0, 0, drawio.colorSettings.color, drawio.lineSettings.lineWidth);
+    //             break;
+    //         case drawio.availableShapes.TEXT:
+    //             drawio.selectedElementText = new Text({ x: mouseEvent.offsetX, y: mouseEvent.offsetY }, 0, 0,
+    //                 drawio.fontSettings.font, drawio.fontSettings.fontSize, drawio.colorSettings.color);
+    //             break;
+    //     }
+    // });
+
     //If the user presses on enter when text input is displayed to type in some text then draw the text.
     $(document).on('keypress', '.text', function (e) {
         var text = $(this).val();
         if (e.which == 13) {
             if (text != null) {
                 drawio.selectedElementText.text = text;
-                drawio.selectedElementText.color = drawio.color;
                 clearAndDraw(drawio.selectedElementText, drawio.event); //drawio.event should be the mouseEvent right now
                 drawio.event = null; //As clearAndDraw got the event, so there will be no confusion, like the wrong event or something.
                 $("input").remove('.text');//no need for input now
@@ -193,12 +279,19 @@ $(function () {
     });
     //mousemove
     $('#my-canvas').on('mousemove', function (mouseEvent) {
-        if(mouseEvent.ctrlKey) {
+        if(mouseEvent.ctrlKey && drawio.dragging) {
             console.log("MouseMove while holding ctrl")
-            if(drawio.dragging) {
-                
+            if(drawio.shapes[drawio.shapeBeingDragged].name == 'Freehand' || drawio.shapes[drawio.shapeBeingDragged].name == 'Line'){
+                drawio.shapes[drawio.shapeBeingDragged].recalculate({x: mouseEvent.offsetX, y: mouseEvent.offsetY});
+                console.log("Recalculating!!");
             }
+            drawio.shapes[drawio.shapeBeingDragged].position = {x: mouseEvent.offsetX, y: mouseEvent.offsetY};
+            drawio.hCtx.clearRect(0, 0, drawio.canvas.width, drawio.canvas.height);
+            drawio.ctx.clearRect(0, 0, drawio.canvas.width, drawio.canvas.height);
+            console.log("From inside mouseMove");
+            drawCanvas(mouseEvent,true);
         }
+    
         else if(drawio.selectedElement && drawio.selectedShape == 'freehand') {
             drawio.selectedElement.lineList.push({x: mouseEvent.offsetX, y:mouseEvent.offsetY});
             drawio.selectedElement.renderOnMouseMove(mouseEvent);
@@ -213,13 +306,13 @@ $(function () {
         
         if(mouseEvent.ctrlKey) {
             console.log("MouseUP while holding ctrl")
-            drawio.draggin = false;
+            drawio.dragging = false;
 
         }
         else if (drawio.selectedElementText) {
             drawio.ctx.closePath();
             drawio.shapes.push(drawio.selectedElementText);
-            drawio.draggin = false;
+            // drawio.dragging = false;
             console.log("2")
 
 
@@ -228,10 +321,12 @@ $(function () {
             console.log(drawio.shapes);
             drawio.selectedElement = null;
             drawio.lines = [];
-            drawio.draggin = false;
+            // drawio.dragging = false;
             console.log("2")
 
         }
+        //console.log(drawio.shapes);
+        drawio.selectedElement = null;
     });
 
     $('.change-color').on('change', function () {
@@ -251,8 +346,8 @@ $(function () {
         drawio.lineSettings.lineWidth = $(this).val();
     });
 
-    $('#undo').on('click', function(){
-        console.log(drawio.shapes);
+    $('#undo').on('click', function () {
+        //console.log(drawio.shapes);
         undo(drawio.shapes);
     });
 
@@ -277,5 +372,31 @@ $(function () {
         var retVal = "rgba(" + hitKey[0] + ", " + hitKey[1] + ", " + hitKey[2] + ", " + hitKey[3] + ")";
         return retVal;
       }
-});
+// });
 
+
+    $('#redo').on('click', function () {
+        console.log(drawio.shapes);
+        redo(drawio.shapes);
+    });
+
+    $('.save').on('click', function() {
+        console.log("save");
+        save();
+    });
+
+    $(document).on('keydown', function (e) {
+        if (e.which === 90 && e.ctrlKey) {
+            undo(drawio.shapes);
+        }
+    });
+
+    $(document).on('keydown', function (e) {
+        if (e.which === 89 && e.ctrlKey) {
+            redo(drawio.shapes);
+        }
+    });
+
+    // console.log('load');
+    // load();
+});

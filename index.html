@@ -14,41 +14,51 @@
             <i class="fa fa-pencil"></i>
         </div>
         <div class="icon" data-shape="square">
-            <i class="fa fa-square-o" aria-hidden="true"></i>
+            <i class="fa fa-square-o new-color" aria-hidden="true"></i>
         </div>
-        <div class="icon" data-shape="star">
-            <i class="fa fa-star-o" aria-hidden="true"></i>
+        <div class="icon" data-shape="square-filled">
+            <i style="border: solid 1px" class="fa fa-square new-color" aria-hidden="true"></i>
+            <i>Rect!</i>
         </div>
-
         <div class="icon" data-shape="circle">
-            <i class="fa fa-circle-o" aria-hidden="true"></i>
+            <i class="fa fa-circle-o new-color" aria-hidden="true"></i>
+        </div>
+        <div id="circle-filled" class="icon" data-shape="circle-filled">
+            <i  class="fa fa-circle new-color" aria-hidden="true"></i>
         </div>
         <div class="icon" data-shape="line">
-            <i aria-hidden="true">__</i>
+            <i class="new-color fa fa-minus" aria-hidden="true"></i>
         </div>
-        <div class="icon" data-readWrite="save">
-            <i class="fa fa-save" aria-hidden="true"></i>
+            <div class="icon" data-shape="text">
+                <i class="fa fa-font" aria-hidden="true"></i>
+            </div>
+        <div class="never-select save">
+            <i class="fa fa-upload" aria-hidden="true"></i>
+            <i>Save drawing!</i>
         </div>
-        <div class="icon" data-redWrite="read">
-            <i class="fa fa-hdd" aria-hidden="true"></i>
-        </div>
-        <div class="never-select" id="undo">
-            <i class="fa fa-undo" aria-hidden="true" "></i>
+        <div class="never-select read">
+            <i class="fa fa-download" aria-hidden="true"></i>
+            <i>Load drawing!</i>
         </div>
         <div class="never-select" id="redo">
             <i class="fa fa-repeat" aria-hidden="true"></i>
+            <i>Redo!</i>
+        </div>
+        <div class="never-select" id="undo">
+            <i class="fa fa-undo" aria-hidden="true" ></i>
+            <i>Undo!</i>
         </div>
         <div class="never-select">
             <select id="select-line-width"></select>
+            <i>Select line width!</i>
         </div>
         <div class="never-select">
             <select id="select-font-size"></select>
+            <i>Select Font size!</i>
         </div>
         <div class="never-select">
             <select id="select-font"></select>
-        </div>
-        <div class="icon" data-shape="text">
-            <i class="fa fa-font" aria-hidden="true"></i>
+            <i>Select Font!</i>
         </div>
         </div>
         <div class="never-select">
@@ -60,6 +70,10 @@
             <p>Not Supported</p>
         </canvas>
         <canvas id="hit-canvas" width="800" height="500">
+        </canvas>
+        <p class="instructions">Ctrl + z for undo</p>
+        <p class="instructions">Ctrl + y for redo</p>
+        <p class="instructions">Hold Ctrl to select and move a shape</p>
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.js" charset="utf-8"></script>
     <script src="shapes.js" charset="utf-8"></script>
