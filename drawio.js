@@ -11,6 +11,7 @@ window.drawio = {
     ctx: document.getElementById('my-canvas').getContext('2d'),//This is a canvas object, tell it that we are going to draw in 2d.
 
     shapes: [],
+    constructors: [],
     selectedShape: 'square',
     selectedElement: null,
     selectedElementText: null,
@@ -51,7 +52,7 @@ window.drawio = {
 
 $(function () {
     //Document is loaded and parsed
-   
+
     try {
         //Implemented in loadselect.js
         loadNumbersSelect(drawio.fontSettings.maxFontSize, drawio.fontSettings.fontSizeRange, drawio.fontSettings.fontSizeSelectionInput, drawio.fontSettings.minFontSize);
@@ -71,9 +72,9 @@ $(function () {
     //Renders the objects from the array
     function drawCanvas() {
 
+
         if (drawio.selectedElement) {
             drawio.selectedElement.render();
-
         }
 
         for (var i = 0; i < drawio.shapes.length; i++) {
@@ -81,13 +82,15 @@ $(function () {
                 drawio.shapes[i].render();
             }
         }
+
     }
 
-    //Clears the canvas and drawsthe elements and performs other functionality such resize and such a stuff.
+    //Clears the canvas and draws the canvas. Only works on the selected element.
     function clearAndDraw(element, mouseEvent) {
         if (element) {
             drawio.ctx.clearRect(0, 0, drawio.canvas.width, drawio.canvas.height);
             element.resize(mouseEvent.offsetX, mouseEvent.offsetY);
+            drawio.circleRadius = element.radius;
             drawCanvas();//Draws everything as the shapes were pushed into the shape array.
         }
     }
@@ -150,28 +153,121 @@ $(function () {
         return allSettings;
     }
 
-     //Saves the settings
-     function save() {
-        var settings = AllSettings();
+    //Saves the settings
+    function save() {
 
+        var settings = AllSettings();//Getting all the settings
+        var constructorsArray = [];
         for (var i = 0; i < settings.length; i++) {
-            window.localStorage.setItem(settings[i][0], JSON.stringify(settings[i][1]));
-            console.log(localStorage.getItem(settings[i][0]));
+            //Save shapes settings
+            console.log(constructorsArray);
+            if (settings[i][0] == 'shapes') {
+                //Save the shape with the shapename as a value
+               
+                window.localStorage.setItem(settings[i][0], JSON.stringify(settings[i][1]));//Saving the shape array.
+                //Saving the constructors so we know what object is going to be drawed again on loading.
+
+                console.log(settings[i]);
+                
+                if(settings[i][1][1]) {
+                    //If there are more than one element one of that element is text then call the constructor for the text.
+                    if(settings[i][1][1].constructor == Text) {
+                        console.log("TEXT");
+                    constructorsArray.push( settings[i][1][1].constructor);
+                    }
+                    //Otherwise do this if there more than one element. 
+                else {
+                   for(var j = 0; j < settings[i][1].length; j++) {
+                    //Making array of constructors to access the correct object later  on.
+                        constructorsArray.push( settings[i][1][j].constructor)//pushing the shapes constructors in another array.
+                    }
+                   }
+                }
+                
+                else {
+                for(var j = 0; j < settings[i][1].length; j++) {
+                    //Making array of constructors to access the correct object later  on.
+                        if(settings[i][1][j]) {
+                        constructorsArray.push( settings[i][1][j].constructor)//pushing the shapes constructors in another array.
+                        }
+                        else {
+
+                        }
+                    }
+                 
+                }
+                
+            }
+            }
+    
+
+        var constructorsArrayString = constructorsArray.join('///');// /// used as a seperator for this array.
+        window.localStorage.setItem('constructors', constructorsArrayString ); //saves the constructors as a string.
+        //localStorage.clear();//Prevents the localstorage to be too slow.
+    }
+
+
+    //Gets the saved settings
+    function load() {
+        
+        drawio.shapes = [];
+        var constructors = localStorage.getItem('constructors');
+        var constructorsArray = constructors.split('///');//To get array of constructors again.
+
+        var settings = AllSettings();//Gets all the default settings so it's possible to manipulate the settings.
+            var savedShapes = [];
+            //Finds the shape array and loads it from the local storage
+            for (var i = 0; i < settings.length; i++) {
+
+                if (settings[i][0] == 'shapes') {
+                    savedShapes = JSON.parse(localStorage.getItem(settings[i][0]));
+                }
+            }
+
+        //Checks if the constructor is the constructor we are looking for, if so we know where we are lookin for in the shape array
+        //as saved shapes is that array, just parsed.
+        for(var i = 0;  i < constructorsArray.length; i++) {
+        if (constructorsArray[i] == Line) {
+                var linePosx = savedShapes[i].position.x;
+                var linePosy = savedShapes[i].position.y;
+                var lineStartX = savedShapes[i].linestartx;
+                var lineStartY = savedShapes[i].linestarty;
+                var color = drawio.colorSettings.color;
+                var width = drawio.lineSettings.lineWidth;
+                
+                drawio.selectedElement = new Line({ x: linePosx, y:  linePosy}, lineStartX, lineStartY, color, width);
+                drawio.shapes.push(drawio.selectedElement);
+                drawio.selectedElement = null;
+        }
+
+        if (constructorsArray[i] == Circle) {
+            var circlePosx = savedShapes[i].position.x;
+            var circlePosy = savedShapes[i].position.y;
+            drawio.selectedElement = new Circle({ x: circlePosx, y: circlePosy }, drawio.colorSettings.color);
+            drawio.selectedElement.radius = savedShapes[i].radius;
+            drawio.shapes.push(drawio.selectedElement);
+            drawio.selectedElement = null;
+        }
+        
+        if (constructorsArray[i] == Rectangle) {
+            var rectanglePosx = savedShapes[i].position.x;
+            var rectanglePosy = savedShapes[i].position.y;
+            
+            drawio.selectedElement = new Rectangle({ x: rectanglePosx, y: rectanglePosy }, drawio.colorSettings.color);
+            
+            drawio.selectedElement.width = savedShapes[i].width;
+            drawio.selectedElement.height = savedShapes[i].height;
+            console.log(savedShapes[i].width);
+            drawio.shapes.push(drawio.selectedElement);
+            drawio.selectedElement = null;
         }
     }
-   
-    //Loads the settings again
-    function load() {
-        var settings = AllSettings();
-        for (var i = 0; i < settings.length; i++) {
-            console.log(localStorage.getItem(settings[i][0]));
-        }
-        drawCanvas();
+    drawCanvas();
     }
 
     //mousedown
     $('#my-canvas').on('mousedown', function (mouseEvent) {
-        //console.log(drawio.selectedShape);
+
         switch (drawio.selectedShape) {
 
             case drawio.availableShapes.RECTANGLE:
@@ -188,6 +284,7 @@ $(function () {
                     drawio.fontSettings.font, drawio.fontSettings.fontSize, drawio.colorSettings.color);
                 break;
         }
+    
     });
     //If the user presses on enter when text input is displayed to type in some text then draw the text.
     $(document).on('keypress', '.text', function (e) {
@@ -216,11 +313,11 @@ $(function () {
 
     //mouseup
     $('#my-canvas').on('mouseup', function () {
+    
         drawio.shapes.push(drawio.selectedElement);//mousemove clears everything
         if (drawio.selectedElementText) {
             drawio.shapes.push(drawio.selectedElementText);
         }
-        //console.log(drawio.shapes);
         drawio.selectedElement = null;
     });
 
@@ -242,18 +339,15 @@ $(function () {
     });
 
     $('#undo').on('click', function () {
-        //console.log(drawio.shapes);
         undo(drawio.shapes);
     });
 
 
     $('#redo').on('click', function () {
-        console.log(drawio.shapes);
         redo(drawio.shapes);
     });
 
-    $('.save').on('click', function() {
-        console.log("save");
+    $('.save').on('click', function () {
         save();
     });
 
@@ -268,7 +362,9 @@ $(function () {
             redo(drawio.shapes);
         }
     });
-
-    console.log('load');
+    $('#clear-canvas').on('click', function(){
+        drawio.ctx.clearRect(0, 0, drawio.canvas.width, drawio.canvas.height);
+        drawio.shapes = [];//Empty the shapes array
+    });
     load();
 });

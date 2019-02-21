@@ -57,4 +57,9 @@ body {
     border: 3px solid black;
 }
 
+#clear-canvas {
+    position: absolute;
+    left: 73%;
+    top: 14.5%;
+}
 
