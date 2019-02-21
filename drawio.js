@@ -61,7 +61,7 @@ window.drawio = {
 
 $(function () {
     //Document is loaded and parsed
-   
+
     try {
         //Implemented in loadselect.js
         loadNumbersSelect(drawio.fontSettings.maxFontSize, drawio.fontSettings.fontSizeRange, drawio.fontSettings.fontSizeSelectionInput, drawio.fontSettings.minFontSize);
@@ -81,6 +81,7 @@ $(function () {
     //Renders the objects from the array
     function drawCanvas(event, flag) {
 
+
         if (drawio.selectedElement) {
             console.log(event)
             drawio.selectedElement.render(event);
@@ -89,16 +90,17 @@ $(function () {
         for (var i = 0; i < drawio.shapes.length; i++) {
             drawio.shapes[i].render(event,flag);
         }
+
     }
 
-    //Clears the canvas and draws the elements and performs other functionality such resize and such a stuff.
+    //Clears the canvas and draws the canvas. Only works on the selected element.
     function clearAndDraw(element, mouseEvent) {
         if (element) {
             drawio.hCtx.clearRect(0, 0, drawio.canvas.width, drawio.canvas.height);
             drawio.ctx.clearRect(0, 0, drawio.canvas.width, drawio.canvas.height);
             element.resize(mouseEvent.offsetX, mouseEvent.offsetY);
-            
-            drawCanvas(mouseEvent);//Draws everything as the shapes were pushed into the shape array.
+            drawio.circleRadius = element.radius;
+            drawCanvas();//Draws everything as the shapes were pushed into the shape array.
         }
     }
     //Helper to make a text input.
@@ -217,45 +219,144 @@ $(function () {
         return allSettings;
     }
 
-     //Saves the settings
-     function save() {
-        var settings = AllSettings();
+    //Saves the settings
+    function save() {
+
+        var settings = AllSettings();//Getting all the settings
+        var constructorsArray = [];
 
         for (var i = 0; i < settings.length; i++) {
-            window.localStorage.setItem(settings[i][0], JSON.stringify(settings[i][1]));
-            console.log(localStorage.getItem(settings[i][0]));
+            //Save shapes settings
+            if (settings[i][0] == 'shapes') {
+                //Save the shape with the shapename as a value
+
+                window.localStorage.setItem(settings[i][0], JSON.stringify(settings[i][1]));//Saving the shape array.
+                //Saving the constructors so we know what object is going to be drawed again on loading.
+
+                for (var j = 0; j < settings[i][1].length; j++) {
+                    //Making array of constructors to access the correct object later  on.
+                    if (settings[i][1][j]) {
+                        constructorsArray.push(settings[i][1][j].constructor)//pushing the shapes constructors in another array.
+                    }
+                }
+            }
+
         }
+
+
+        var constructorsArrayString = constructorsArray.join('///');// /// used as a seperator for this array.
+        window.localStorage.setItem('constructors', constructorsArrayString); //saves the constructors as a string.
+        //localStorage.clear();//Prevents the localstorage to be too slow.
     }
-   
-    //Loads the settings again
+
+
+    //Gets the saved settings
     function load() {
-        var settings = AllSettings();
+
+        drawio.shapes = [];
+
+        var constructors = localStorage.getItem('constructors');
+        var constructorsArray = constructors.split('///');//To get array of constructors again.
+        var savedShapesWithoutNull = [];
+        var settings = AllSettings();//Gets all the default settings so it's possible to manipulate the settings.
+        var savedShapes = [];
+        //Finds the shape array and loads it from the local storage
         for (var i = 0; i < settings.length; i++) {
-            console.log(localStorage.getItem(settings[i][0]));
+
+            if (settings[i][0] == 'shapes') {
+                savedShapes = JSON.parse(localStorage.getItem(settings[i][0]));
+            }
+        }
+
+        //Checks if the constructor is the constructor we are looking for, if so we know where we are lookin for in the shape array
+        //as saved shapes is that array, just parsed.
+        for (var i = 0; i < constructorsArray.length; i++) {
+            if (constructorsArray[i] == Line) {
+                var linePosx = savedShapes[i].position.x;
+                var linePosy = savedShapes[i].position.y;
+                var lineStartX = savedShapes[i].linestartx;
+                var lineStartY = savedShapes[i].linestarty;
+                var lineColor = savedShapes[i].color;
+                var width = savedShapes[i].lineWidth;
+
+                drawio.selectedElement = new Line({ x: linePosx, y: linePosy }, lineStartX, lineStartY, lineColor, width);
+                drawio.shapes.push(drawio.selectedElement);
+                drawio.selectedElement = null;
+            }
+
+            if (constructorsArray[i] == Circle) {
+                var circlePosx = savedShapes[i].position.x;
+                var circlePosy = savedShapes[i].position.y;
+                var circleColor = savedShapes[i].color;
+                drawio.selectedElement = new Circle({ x: circlePosx, y: circlePosy }, circleColor);
+                drawio.selectedElement.radius = savedShapes[i].radius;
+                drawio.shapes.push(drawio.selectedElement);
+                drawio.selectedElement = null;
+            }
+
+            if (constructorsArray[i] == Rectangle) {
+                var rectanglePosx = savedShapes[i].position.x;
+                var rectanglePosy = savedShapes[i].position.y;
+                var rectColor = savedShapes[i].color;
+                drawio.selectedElement = new Rectangle({ x: rectanglePosx, y: rectanglePosy }, rectColor);
+
+                drawio.selectedElement.width = savedShapes[i].width;
+                drawio.selectedElement.height = savedShapes[i].height;
+                drawio.shapes.push(drawio.selectedElement);
+                drawio.selectedElement = null;
+            }
+            console.log("CONSTRUCTORS");
+            console.log(constructorsArray[i]);
+            if (constructorsArray[i] == Text) {
+                //Somehow, null is in the savedShapeArray so taking the nulls out.
+                for (var j = 0; j < savedShapes.length; j++) {
+                    if (savedShapes[j]) {
+                        savedShapesWithoutNull.push(savedShapes[j]);
+                    }
+                }
+                console.log(savedShapesWithoutNull[i]);
+                var textPosx = savedShapesWithoutNull[i].position.x;
+                var textPosy = savedShapesWithoutNull[i].position.y;
+                var text = savedShapesWithoutNull[i].text;
+                var font = savedShapesWithoutNull[i].font;
+                var fontSize = savedShapesWithoutNull[i].fontsize;
+                var textColor = savedShapesWithoutNull[i].color;
+                console.log("SAVEDWITHOUTNULL");
+                console.log(savedShapesWithoutNull[i]);
+                drawio.selectedElementText = new Text({ x: textPosx, y: textPosy }, font, fontSize, textColor);
+                drawio.selectedElementText.text = text;
+                drawio.shapes.push(drawio.selectedElementText);
+                console.log(drawio.shapes);
+                drawio.selectedElementText = null;
+            }
+
+
         }
         drawCanvas();
     }
 
     //mousedown
-    // $('#my-canvas').on('mousedown', function (mouseEvent) {
-    //     //console.log(drawio.selectedShape);
-    //     switch (drawio.selectedShape) {
 
-    //         case drawio.availableShapes.RECTANGLE:
-    //             drawio.selectedElement = new Rectangle({ x: mouseEvent.offsetX, y: mouseEvent.offsetY }, drawio.colorSettings.color);
-    //             break;
-    //         case drawio.availableShapes.CIRCLE:
-    //             drawio.selectedElement = new Circle({ x: mouseEvent.offsetX, y: mouseEvent.offsetY }, drawio.colorSettings.color);
-    //             break;
-    //         case drawio.availableShapes.LINE:
-    //             drawio.selectedElement = new Line({ x: mouseEvent.offsetX, y: mouseEvent.offsetY }, 0, 0, drawio.colorSettings.color, drawio.lineSettings.lineWidth);
-    //             break;
-    //         case drawio.availableShapes.TEXT:
-    //             drawio.selectedElementText = new Text({ x: mouseEvent.offsetX, y: mouseEvent.offsetY }, 0, 0,
-    //                 drawio.fontSettings.font, drawio.fontSettings.fontSize, drawio.colorSettings.color);
-    //             break;
-    //     }
-    // });
+    $('#my-canvas').on('mousedown', function (mouseEvent) {
+
+        switch (drawio.selectedShape) {
+
+            case drawio.availableShapes.RECTANGLE:
+                drawio.selectedElement = new Rectangle({ x: mouseEvent.offsetX, y: mouseEvent.offsetY }, drawio.colorSettings.color);
+                break;
+            case drawio.availableShapes.CIRCLE:
+                drawio.selectedElement = new Circle({ x: mouseEvent.offsetX, y: mouseEvent.offsetY }, drawio.colorSettings.color);
+                break;
+            case drawio.availableShapes.LINE:
+                drawio.selectedElement = new Line({ x: mouseEvent.offsetX, y: mouseEvent.offsetY }, 0, 0, drawio.colorSettings.color, drawio.lineSettings.lineWidth);
+                break;
+            case drawio.availableShapes.TEXT:
+                drawio.selectedElementText = new Text({ x: mouseEvent.offsetX, y: mouseEvent.offsetY },
+                    drawio.fontSettings.font, drawio.fontSettings.fontSize, drawio.colorSettings.color);
+                break;
+        }
+
+    });
 
     //If the user presses on enter when text input is displayed to type in some text then draw the text.
     $(document).on('keypress', '.text', function (e) {
@@ -312,10 +413,6 @@ $(function () {
         else if (drawio.selectedElementText) {
             drawio.ctx.closePath();
             drawio.shapes.push(drawio.selectedElementText);
-            // drawio.dragging = false;
-            console.log("2")
-
-
         }else {
             drawio.shapes.push(drawio.selectedElement);//mousemove clears everything
             console.log(drawio.shapes);
@@ -325,7 +422,6 @@ $(function () {
             console.log("2")
 
         }
-        //console.log(drawio.shapes);
         drawio.selectedElement = null;
     });
 
@@ -347,7 +443,6 @@ $(function () {
     });
 
     $('#undo').on('click', function () {
-        //console.log(drawio.shapes);
         undo(drawio.shapes);
     });
 
@@ -376,12 +471,10 @@ $(function () {
 
 
     $('#redo').on('click', function () {
-        console.log(drawio.shapes);
         redo(drawio.shapes);
     });
 
-    $('.save').on('click', function() {
-        console.log("save");
+    $('.save').on('click', function () {
         save();
     });
 
@@ -397,6 +490,10 @@ $(function () {
         }
     });
 
-    // console.log('load');
-    // load();
+});
+    $('#clear-canvas').on('click', function () {
+        drawio.ctx.clearRect(0, 0, drawio.canvas.width, drawio.canvas.height);
+        drawio.shapes = [];//Empty the shapes array
+    });
+    load();
 });
