@@ -37,11 +37,9 @@ function Line(position, linestartx, linestarty, color, LineWidth) {
     this.lineWidth = LineWidth;
 }
 
-function Text(position, textposx, textposy, font, fontsize, color) {
+function Text(position, font, fontsize, color) {
     Shape.call(this, position);
     this.position = position;
-    this.textposx = textposx;
-    this.textposy = textposy;
     this.font = font;
     this.fontsize = fontsize;
     this.text = '';
