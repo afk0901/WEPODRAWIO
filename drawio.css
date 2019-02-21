@@ -12,9 +12,6 @@ body {
     display: block;
     
 }
-#hit-canvas {
-    display: none;
-}
 .icon {
     position: relative;
     display: inline-block;
@@ -25,15 +22,12 @@ body {
     transition: color .5s;
 }
 
-.icon.selected {
-    color: yellow;
-}
-.fa-circle, .fa-circle-o{
-    /* color: red; */
-}
 .icon:hover {
     color: orange;
     cursor: pointer;
+}
+.icon.selected {
+    color: yellow;
 }
 
 .never-select{
@@ -45,20 +39,12 @@ body {
     top: 15px;
     transition: color .5s;
 }
-.never-select:hover {
-    color: orange;
-    cursor: pointer;
-}´
-i:hover{
-    color: black;
-}
 
 .change-color {
-    background-color: linear-gradient(red,purple,blue, cyan,green,yellow,orange);
+    background-image: linear-gradient(orange, yellow);
     border-radius: 5px;
-    /* width: 50px;
-    height: 50px; */
-    /* margin: .4rem; */
+    width: 50px;
+    height: 50px;
 }
 
 .navbar {
@@ -69,16 +55,7 @@ i:hover{
 
 .fonts{
     border: 3px solid black;
-
-.instructions{
-    margin: 0 auto;
-    font-size: 1.2em;
 }
-i {
-    font-size: 10px;
-    text-align: center;
-    display: block;
-    /* align-self: auto; */
 
 #clear-canvas {
     position: absolute;

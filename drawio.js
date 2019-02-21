@@ -9,27 +9,19 @@ window.drawio = {
 
     canvas: document.getElementById('my-canvas'),
     ctx: document.getElementById('my-canvas').getContext('2d'),//This is a canvas object, tell it that we are going to draw in 2d.
-    hitcanvas: document.getElementById('hit-canvas'),   ///Hit canvas, used to detect if you click a shape
-    hCtx: document.getElementById('hit-canvas').getContext('2d'), ///Hit canvas context, used when a shape has been clicked.
 
-    dragging : false,
-    hitKey: 'black',
-    shapeBeingDragged: 0,
     shapes: [],
-    lines: [],
-    selectedShape: 'freehand',
+    constructors: [],
+    selectedShape: 'square',
     selectedElement: null,
     selectedElementText: null,
 
     //All available shapes goes here
     availableShapes: {
         RECTANGLE: 'square',
-        RECTANGLE_FILLED: 'square-filled',
         CIRCLE: 'circle',
         LINE: 'line',
-        TEXT: 'text',
-        FREEHAND: 'freehand',
-        CIRCLE_FILLED: 'circle-filled' 
+        TEXT: 'text'
     },
 
     colorSettings: {
@@ -52,8 +44,7 @@ window.drawio = {
         minLineWidht: 1,
         lineWidth: 5, //Default line width
         maxlineWidth: 50,
-        lineWidhtRange: 1,
-        lineCap: 'round'
+        lineWidhtRange: 1
     },
     event: null,  //To transfer event between functions
     undoStorage: [] //Keeps undoed shapes
@@ -79,16 +70,17 @@ $(function () {
     }
 
     //Renders the objects from the array
-    function drawCanvas(event, flag) {
+    function drawCanvas() {
 
 
         if (drawio.selectedElement) {
-            console.log(event)
-            drawio.selectedElement.render(event);
+            drawio.selectedElement.render();
         }
 
         for (var i = 0; i < drawio.shapes.length; i++) {
-            drawio.shapes[i].render(event,flag);
+            if (drawio.shapes[i] != null) {
+                drawio.shapes[i].render();
+            }
         }
 
     }
@@ -96,7 +88,6 @@ $(function () {
     //Clears the canvas and draws the canvas. Only works on the selected element.
     function clearAndDraw(element, mouseEvent) {
         if (element) {
-            drawio.hCtx.clearRect(0, 0, drawio.canvas.width, drawio.canvas.height);
             drawio.ctx.clearRect(0, 0, drawio.canvas.width, drawio.canvas.height);
             element.resize(mouseEvent.offsetX, mouseEvent.offsetY);
             drawio.circleRadius = element.radius;
@@ -129,7 +120,6 @@ $(function () {
             drawio.undoStorage.push(undoedShape);//So it's possible to do a a redo.
         }
         drawio.ctx.clearRect(0, 0, drawio.canvas.width, drawio.canvas.height);
-        drawio.hCtx.clearRect(0, 0, drawio.canvas.width, drawio.canvas.height);
         drawCanvas();
     }
 
@@ -142,62 +132,6 @@ $(function () {
         drawCanvas();
     }
 
-    // console.log("The ",window.onkeydown," key was pressed");
-
-    //mousedown
-    $('#my-canvas').on('mousedown', function (mouseEvent) {
-        if(mouseEvent.ctrlKey) {
-            ///
-            var hitKey = parseHitKey(drawio.hCtx.getImageData(mouseEvent.offsetX,mouseEvent.offsetY,1,1).data);
-            for(var i = 0; i < drawio.shapes.length; i++){
-                if(drawio.shapes[i].hitKey == hitKey) {
-                    console.log("The shape selected is",drawio.shapes[i]);
-                    drawio.shapeBeingDragged = i;
-                    drawio.dragging = true;
-                }
-            }
-        }
-        else {
-            drawio.hitKey = getRandomColor();
-            switch (drawio.selectedShape) {
-
-                case drawio.availableShapes.RECTANGLE:
-                    drawio.selectedElement = new Rectangle({ x: mouseEvent.offsetX, y: mouseEvent.offsetY }, drawio.colorSettings.color, drawio.hitKey);
-                    drawio.hitKey = getRandomColor();
-                    break;
-                case drawio.availableShapes.RECTANGLE_FILLED:
-                    drawio.selectedElement = new Rectangle({ x: mouseEvent.offsetX, y: mouseEvent.offsetY }, drawio.colorSettings.color, drawio.hitKey, true);
-                    drawio.hitKey = getRandomColor();
-                    break;
-                case drawio.availableShapes.CIRCLE:
-                    drawio.selectedElement = new Circle({ x: mouseEvent.offsetX, y: mouseEvent.offsetY }, drawio.colorSettings.color, drawio.hitKey);
-                    drawio.hitKey = getRandomColor();
-                    break;
-                case drawio.availableShapes.CIRCLE_FILLED:
-                    drawio.selectedElement = new Circle({ x: mouseEvent.offsetX, y: mouseEvent.offsetY }, drawio.colorSettings.color, drawio.hitKey, true);
-                    getRandomColor();
-                    break;
-                case drawio.availableShapes.LINE:
-                    drawio.selectedElement = new Line({ x: mouseEvent.offsetX, y: mouseEvent.offsetY }, 0, 0, drawio.colorSettings.color, drawio.lineSettings.lineWidth, drawio.hitKey);
-                    drawio.hitKey = getRandomColor();
-                    break;
-                case drawio.availableShapes.TEXT:
-                    drawio.selectedElementText = new Text({ x: mouseEvent.offsetX, y: mouseEvent.offsetY }, 0, 0,
-                        drawio.fontSettings.font, drawio.fontSettings.fontSize, drawio.colorSettings.color,drawio.hitKey);
-                    drawio.hitKey = getRandomColor();
-                    break;
-                case drawio.availableShapes.FREEHAND:
-                    drawio.selectedElement = new Freehand({x: mouseEvent.offsetX, y: mouseEvent.offsetY}, drawio.colorSettings.color, drawio.lineSettings.lineWidth, drawio.lineSettings.lineCap, drawio.hitKey);
-                    drawio.ctx.beginPath();
-                    drawio.ctx.moveTo(mouseEvent.offsetX, mouseEvent.offsetY);
-                    drawio.hCtx.beginPath();
-                    drawio.hCtx.moveTo(mouseEvent.offsetX, mouseEvent.offsetY);
-                    drawio.selectedElement.lineList.push({x: mouseEvent.offsetX, y: mouseEvent.offsetY});
-                    drawio.hitKey = getRandomColor();
-                    break;
-            }
-        }
-    })
     //Find the settings to save and returns the value and the key.
     function findSettings(settings) {
         //Produces a key value pair of the object
@@ -336,7 +270,6 @@ $(function () {
     }
 
     //mousedown
-
     $('#my-canvas').on('mousedown', function (mouseEvent) {
 
         switch (drawio.selectedShape) {
@@ -357,7 +290,6 @@ $(function () {
         }
 
     });
-
     //If the user presses on enter when text input is displayed to type in some text then draw the text.
     $(document).on('keypress', '.text', function (e) {
         var text = $(this).val();
@@ -380,47 +312,15 @@ $(function () {
     });
     //mousemove
     $('#my-canvas').on('mousemove', function (mouseEvent) {
-        if(mouseEvent.ctrlKey && drawio.dragging) {
-            console.log("MouseMove while holding ctrl")
-            if(drawio.shapes[drawio.shapeBeingDragged].name == 'Freehand' || drawio.shapes[drawio.shapeBeingDragged].name == 'Line'){
-                drawio.shapes[drawio.shapeBeingDragged].recalculate({x: mouseEvent.offsetX, y: mouseEvent.offsetY});
-                console.log("Recalculating!!");
-            }
-            drawio.shapes[drawio.shapeBeingDragged].position = {x: mouseEvent.offsetX, y: mouseEvent.offsetY};
-            drawio.hCtx.clearRect(0, 0, drawio.canvas.width, drawio.canvas.height);
-            drawio.ctx.clearRect(0, 0, drawio.canvas.width, drawio.canvas.height);
-            console.log("From inside mouseMove");
-            drawCanvas(mouseEvent,true);
-        }
-    
-        else if(drawio.selectedElement && drawio.selectedShape == 'freehand') {
-            drawio.selectedElement.lineList.push({x: mouseEvent.offsetX, y:mouseEvent.offsetY});
-            drawio.selectedElement.renderOnMouseMove(mouseEvent);
-            console.log("Freehand is selected");
-        }else {
-            clearAndDraw(drawio.selectedElement, mouseEvent);
-        }
+        clearAndDraw(drawio.selectedElement, mouseEvent);
     });
 
     //mouseup
-    $('#my-canvas').on('mouseup', function (mouseEvent) {
-        
-        if(mouseEvent.ctrlKey) {
-            console.log("MouseUP while holding ctrl")
-            drawio.dragging = false;
+    $('#my-canvas').on('mouseup', function () {
 
-        }
-        else if (drawio.selectedElementText) {
-            drawio.ctx.closePath();
+        drawio.shapes.push(drawio.selectedElement);//mousemove clears everything
+        if (drawio.selectedElementText) {
             drawio.shapes.push(drawio.selectedElementText);
-        }else {
-            drawio.shapes.push(drawio.selectedElement);//mousemove clears everything
-            console.log(drawio.shapes);
-            drawio.selectedElement = null;
-            drawio.lines = [];
-            // drawio.dragging = false;
-            console.log("2")
-
         }
         drawio.selectedElement = null;
     });
@@ -446,29 +346,6 @@ $(function () {
         undo(drawio.shapes);
     });
 
-    function getRandomColor() {
-        var x = Math.floor(Math.random() * 256);
-        var y = Math.floor(Math.random() * 256);
-        var z = Math.floor(Math.random() * 256);
-        var v = 255;
-        var color = "rgba(" + x + ", " + y + ", " + z + ", " + v + ")";
-
-        
-            // var letters = '0123456789ABCDEF';
-            // var color = '#';
-            // for (var i = 0; i < 6; i++) {
-            //   color += letters[Math.floor(Math.random() * 16)];
-            // }
-            
-        return color;
-      }
-
-      function parseHitKey(hitKey) {
-        var retVal = "rgba(" + hitKey[0] + ", " + hitKey[1] + ", " + hitKey[2] + ", " + hitKey[3] + ")";
-        return retVal;
-      }
-// });
-
 
     $('#redo').on('click', function () {
         redo(drawio.shapes);
@@ -489,8 +366,6 @@ $(function () {
             redo(drawio.shapes);
         }
     });
-
-});
     $('#clear-canvas').on('click', function () {
         drawio.ctx.clearRect(0, 0, drawio.canvas.width, drawio.canvas.height);
         drawio.shapes = [];//Empty the shapes array
